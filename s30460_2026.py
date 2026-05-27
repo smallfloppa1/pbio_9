@@ -2,6 +2,7 @@ import random
 import sys
 
 NUCLEOTIDES = ["A", "C", "G", "T"]
+BASE_PAIRS = {"A": "T", "T": "A", "C": "G", "G": "C"}
 
 
 def get_valid_length():
@@ -73,6 +74,45 @@ def save_fasta(filename, content):
         fh.write("\n")
 
 
+def find_motif(seq, motif):
+    hits = []
+    motif = motif.upper()
+    i = 0
+    while i <= len(seq) - len(motif):
+        if seq[i:i + len(motif)].upper() == motif:
+            hits.append(i + 1)
+        i += 1
+    return hits
+
+
+def ask_and_find_motif(seq):
+    motif = input("\nSearch for motif (e.g. ATG): ").strip()
+    if motif == "":
+        return
+    found = find_motif(seq, motif)
+    if len(found) == 0:
+        print(f"Motif '{motif.upper()}' was not found.")
+    else:
+        positions_str = ", ".join(str(p) for p in found)
+        print(f"Motif '{motif.upper()}' found {len(found)} time(s) at: {positions_str}")
+
+
+def get_complement(seq):
+    return "".join(BASE_PAIRS[ch] for ch in seq.upper())
+
+
+def get_reverse_complement(seq):
+    return get_complement(seq)[::-1]
+
+
+def build_complement_fasta(sid, desc, seq, width=80):
+    comp = get_complement(seq)
+    rcomp = get_reverse_complement(seq)
+    part1 = to_fasta(f"{sid}_complement", f"complement | {desc}", comp, width)
+    part2 = to_fasta(f"{sid}_rev_complement", f"reverse complement | {desc}", rcomp, width)
+    return part1 + "\n" + part2
+
+
 def main():
     length = get_valid_length()
     sid = get_valid_id()
@@ -85,6 +125,11 @@ def main():
 
     dna_with_name = embed_name(dna, username)
     fasta_out = to_fasta(sid, desc, dna_with_name)
+
+    ask_and_find_motif(dna)
+
+    comp_fasta = build_complement_fasta(sid, desc, dna)
+    fasta_out += "\n" + comp_fasta
 
     out_file = f"{sid}.fasta"
     save_fasta(out_file, fasta_out)
