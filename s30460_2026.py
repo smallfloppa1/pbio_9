@@ -42,16 +42,53 @@ def stats(seq):
     return result
 
 
+def show_stats(st, n):
+    print(f"\nStatistics (length={n}):")
+    for base in NUCLEOTIDES:
+        print(f"  {base}: {st[base]:.2f}%")
+    print(f"  GC-content: {st['GC']:.2f}%")
+
+
 def embed_name(seq, name):
-    pass
+    idx = random.randint(0, len(seq))
+    return seq[:idx] + name.lower() + seq[idx:]
 
 
 def to_fasta(sid, desc, seq, width=80):
-    pass
+    if desc.strip() == "":
+        header = f">{sid}"
+    else:
+        header = f">{sid} {desc}"
+    chunks = []
+    pos = 0
+    while pos < len(seq):
+        chunks.append(seq[pos:pos + width])
+        pos += width
+    return header + "\n" + "\n".join(chunks)
+
+
+def save_fasta(filename, content):
+    with open(filename, "w") as fh:
+        fh.write(content)
+        fh.write("\n")
 
 
 def main():
-    pass
+    length = get_valid_length()
+    sid = get_valid_id()
+    desc = input("Description (optional): ")
+    username = input("Your name: ")
+
+    dna = make_dna(length)
+    st = stats(dna)
+    show_stats(st, length)
+
+    dna_with_name = embed_name(dna, username)
+    fasta_out = to_fasta(sid, desc, dna_with_name)
+
+    out_file = f"{sid}.fasta"
+    save_fasta(out_file, fasta_out)
+    print(f"\nSaved to {out_file}")
 
 
 if __name__ == "__main__":
