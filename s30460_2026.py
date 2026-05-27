@@ -10,6 +10,7 @@ BASE_PAIRS = {"A": "T", "T": "A", "C": "G", "G": "C"}
 
 
 def get_valid_length():
+    """Asks user for sequence length, repeats until valid integer in [1, 100000]."""
     while True:
         raw = input("Sequence length: ")
         try:
@@ -24,6 +25,7 @@ def get_valid_length():
 
 
 def get_valid_id():
+    """Asks user for a sequence ID, rejects empty strings and whitespace."""
     while True:
         sid = input("Sequence ID: ")
         if sid == "":
@@ -35,10 +37,12 @@ def get_valid_id():
 
 
 def make_dna(n):
+    """Generates a random DNA string of length n from A, C, G, T."""
     return "".join(random.choice(NUCLEOTIDES) for _ in range(n))
 
 
 def stats(seq):
+    """Returns a dict with percentage of each nucleotide and GC-content."""
     total = len(seq)
     result = {}
     for base in NUCLEOTIDES:
@@ -48,6 +52,7 @@ def stats(seq):
 
 
 def show_stats(st, n):
+    """Prints nucleotide percentages and GC-content to the console."""
     print(f"\nStatistics (length={n}):")
     for base in NUCLEOTIDES:
         print(f"  {base}: {st[base]:.2f}%")
@@ -55,11 +60,13 @@ def show_stats(st, n):
 
 
 def embed_name(seq, name):
+    """Inserts the user's name in lowercase at a random position in the sequence."""
     idx = random.randint(0, len(seq))
     return seq[:idx] + name.lower() + seq[idx:]
 
 
 def to_fasta(sid, desc, seq, width=80):
+    """Formats a sequence as a FASTA record with lines of given width."""
     if desc.strip() == "":
         header = f">{sid}"
     else:
@@ -73,12 +80,14 @@ def to_fasta(sid, desc, seq, width=80):
 
 
 def save_fasta(filename, content):
+    """Writes FASTA content to a file with a trailing newline."""
     with open(filename, "w") as fh:
         fh.write(content)
         fh.write("\n")
 
 
 def find_motif(seq, motif):
+    """Finds all positions of a motif in the sequence """
     hits = []
     motif = motif.upper()
     i = 0
@@ -90,6 +99,7 @@ def find_motif(seq, motif):
 
 
 def ask_and_find_motif(seq):
+    """Prompts the user for a motif and displays all found positions."""
     motif = input("\nSearch for motif (e.g. ATG): ").strip()
     if motif == "":
         return
@@ -102,14 +112,17 @@ def ask_and_find_motif(seq):
 
 
 def get_complement(seq):
+    """Returns the complementary DNA strand using base pairing rules."""
     return "".join(BASE_PAIRS[ch] for ch in seq.upper())
 
 
 def get_reverse_complement(seq):
+    """Returns the reverse complement of the DNA sequence."""
     return get_complement(seq)[::-1]
 
 
 def build_complement_fasta(sid, desc, seq, width=80):
+    """Builds FASTA records for both complement and reverse complement."""
     comp = get_complement(seq)
     rcomp = get_reverse_complement(seq)
     part1 = to_fasta(f"{sid}_complement", f"complement | {desc}", comp, width)
@@ -118,6 +131,7 @@ def build_complement_fasta(sid, desc, seq, width=80):
 
 
 def dna_to_rna(seq):
+    """Transcribes DNA to mRNA by replacing T with U."""
     rna = ""
     for ch in seq.upper():
         if ch == "T":
@@ -128,11 +142,13 @@ def dna_to_rna(seq):
 
 
 def build_mrna_fasta(sid, desc, seq, width=80):
+    """Builds a FASTA record for the transcribed mRNA sequence."""
     rna = dna_to_rna(seq)
     return to_fasta(f"{sid}_mRNA", f"transcription | {desc}", rna, width)
 
 
 def run_batch(count, length, desc, username):
+    """Generates multiple sequences with auto-numbered IDs as multi-FASTA."""
     all_records = []
     for num in range(1, count + 1):
         sid = f"seq{num:04d}"
@@ -146,6 +162,7 @@ def run_batch(count, length, desc, username):
 
 
 def main():
+    """Main function — handles batch or single mode and runs all features."""
     mode = input("Batch mode? (y/n): ").strip().lower()
 
     if mode == "y":
