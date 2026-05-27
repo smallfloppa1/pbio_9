@@ -1,3 +1,7 @@
+# Album number: s30460
+# Date: 2026-04-30
+# Description: Random DNA sequence generator in FASTA format
+
 import random
 import sys
 
@@ -113,27 +117,72 @@ def build_complement_fasta(sid, desc, seq, width=80):
     return part1 + "\n" + part2
 
 
+def dna_to_rna(seq):
+    rna = ""
+    for ch in seq.upper():
+        if ch == "T":
+            rna += "U"
+        else:
+            rna += ch
+    return rna
+
+
+def build_mrna_fasta(sid, desc, seq, width=80):
+    rna = dna_to_rna(seq)
+    return to_fasta(f"{sid}_mRNA", f"transcription | {desc}", rna, width)
+
+
+def run_batch(count, length, desc, username):
+    all_records = []
+    for num in range(1, count + 1):
+        sid = f"seq{num:04d}"
+        dna = make_dna(length)
+        st = stats(dna)
+        show_stats(st, length)
+        dna_display = embed_name(dna, username)
+        record = to_fasta(sid, desc, dna_display)
+        all_records.append(record)
+    return "\n".join(all_records)
+
+
 def main():
-    length = get_valid_length()
-    sid = get_valid_id()
-    desc = input("Description (optional): ")
-    username = input("Your name: ")
+    mode = input("Batch mode? (y/n): ").strip().lower()
 
-    dna = make_dna(length)
-    st = stats(dna)
-    show_stats(st, length)
+    if mode == "y":
+        count = get_valid_length()
+        length = get_valid_length()
+        desc = input("Description (optional): ")
+        username = input("Your name: ")
+        output = run_batch(count, length, desc, username)
+        out_file = "batch_output.fasta"
+        save_fasta(out_file, output)
+        print(f"\n{count} sequences saved to {out_file}")
 
-    dna_with_name = embed_name(dna, username)
-    fasta_out = to_fasta(sid, desc, dna_with_name)
+    else:
+        length = get_valid_length()
+        sid = get_valid_id()
+        desc = input("Description (optional): ")
+        username = input("Your name: ")
 
-    ask_and_find_motif(dna)
+        dna = make_dna(length)
+        st = stats(dna)
+        show_stats(st, length)
 
-    comp_fasta = build_complement_fasta(sid, desc, dna)
-    fasta_out += "\n" + comp_fasta
+        dna_with_name = embed_name(dna, username)
+        fasta_out = to_fasta(sid, desc, dna_with_name)
 
-    out_file = f"{sid}.fasta"
-    save_fasta(out_file, fasta_out)
-    print(f"\nSaved to {out_file}")
+        ask_and_find_motif(dna)
+
+        comp_fasta = build_complement_fasta(sid, desc, dna)
+        fasta_out += "\n" + comp_fasta
+
+        mrna_fasta = build_mrna_fasta(sid, desc, dna)
+        fasta_out += "\n" + mrna_fasta
+
+        out_file = f"{sid}.fasta"
+        save_fasta(out_file, fasta_out)
+        print(f"\nSaved to {out_file}")
+        print("(Contains: original, complement, reverse complement, mRNA)")
 
 
 if __name__ == "__main__":
